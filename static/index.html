@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nizami Local AI</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      margin: 0;
+    }
+    .wrap {
+      max-width: 980px;
+      margin: 35px auto;
+      padding: 20px;
+    }
+    .card {
+      background: #111827;
+      border: 1px solid #334155;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(0,0,0,.25);
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+    }
+    .muted {
+      color: #94a3b8;
+      margin-bottom: 20px;
+    }
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    select, textarea, button {
+      border-radius: 12px;
+      border: 1px solid #475569;
+      background: #020617;
+      color: white;
+      padding: 12px 14px;
+      font-size: 15px;
+    }
+    select {
+      min-width: 220px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 150px;
+      resize: vertical;
+      direction: rtl;
+      line-height: 1.7;
+    }
+    button {
+      cursor: pointer;
+      min-width: 130px;
+    }
+    button:hover {
+      background: #1e293b;
+    }
+    .primary {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+    .quick button {
+      min-width: auto;
+      font-size: 14px;
+      padding: 10px 12px;
+    }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      background: #020617;
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 18px;
+      min-height: 220px;
+      color: #e2e8f0;
+      direction: rtl;
+      line-height: 1.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Nizami Local AI</h1>
+      <div class="muted">واجهة محلية لنظام الذكاء الاصطناعي الخاص بك</div>
+
+      <div class="row">
+        <select id="profile">
+          <option value="analyst">محلل أعمال / Analyst</option>
+          <option value="writer">كاتب محتوى / Writer</option>
+          <option value="coder">مبرمج / Coder</option>
+        </select>
+        <button onclick="getStatus()">Status</button>
+        <button onclick="getDoctor()">Doctor</button>
+        <button onclick="copyOutput()">نسخ الرد</button>
+      </div>
+
+      <div class="row quick">
+        <button onclick="templateMail()">رسالة ألمانية</button>
+        <button onclick="templatePlan()">خطة مشروع</button>
+        <button onclick="templateProduct()">وصف منتج</button>
+        <button onclick="templateReview()">رد على تقييم</button>
+      </div>
+
+      <textarea id="message" placeholder="اكتب طلبك هنا..."></textarea>
+
+      <div class="row">
+        <button class="primary" onclick="sendChat()">إرسال</button>
+        <button onclick="clearOutput()">مسح</button>
+      </div>
+
+      <pre id="output">جاهز.</pre>
+    </div>
+  </div>
+
+  <script>
+    const output = document.getElementById("output");
+    const message = document.getElementById("message");
+
+    function setOutput(text) {
+      output.textContent = text;
+    }
+
+    async function sendChat() {
+      const profile = document.getElementById("profile").value;
+      const msg = message.value.trim();
+
+      if (!msg) {
+        setOutput("اكتب طلب أولاً.");
+        return;
+      }
+
+      setOutput("عم يفكر...");
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ profile, message: msg })
+        });
+
+        const data = await res.json();
+        setOutput(data.output || data.error || "لا يوجد رد.");
+      } catch (err) {
+        setOutput("Error: " + err.message);
+      }
+    }
+
+    async function getStatus() {
+      setOutput("جاري فحص الحالة...");
+      const res = await fetch("/api/status");
+      const data = await res.json();
+      setOutput(data.output || "No status");
+    }
+
+    async function getDoctor() {
+      setOutput("جاري تشغيل Doctor...");
+      const res = await fetch("/api/doctor");
+      const data = await res.json();
+      setOutput(data.output || "No doctor output");
+    }
+
+    function clearOutput() {
+      setOutput("تم المسح.");
+      message.value = "";
+    }
+
+    function copyOutput() {
+      navigator.clipboard.writeText(output.textContent);
+      alert("تم نسخ الرد");
+    }
+
+    function templateMail() {
+      document.getElementById("profile").value = "writer";
+      message.value = "اكتب رسالة ألمانية رسمية قصيرة لشركة تصنيع. الموضوع: نحن نبحث عن شريك لتصنيع منتج احترافي ونريد فتح تعاون أولي.";
+    }
+
+    function templatePlan() {
+      document.getElementById("profile").value = "analyst";
+      message.value = "اعمل خطة عملية من 10 خطوات لتحويل هذه الفكرة إلى مشروع حقيقي قابل للبيع.";
+    }
+
+    function templateProduct() {
+      document.getElementById("profile").value = "writer";
+      message.value = "اكتب وصف منتج احترافي بالألمانية مناسب لموقع إلكتروني.";
+    }
+
+    function templateReview() {
+      document.getElementById("profile").value = "writer";
+      message.value = "اكتب رد ألماني مهذب واحترافي على تقييم Google لمطعم. التقييم سلبي والزبون غير راضٍ عن الخدمة.";
+    }
+  </script>
+</body>
+</html>
